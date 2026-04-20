@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Shoes DZ13</title>
+    <style>
+        :root { 
+            --p: #e67e22; --d: #1a1a1a; --w: #25d366; 
+            --fb: #1877f2; --ig: #e4405f; --tk: #000000;
+        }
+        body { font-family: sans-serif; margin: 0; background: #f4f4f4; }
+        header { background: var(--d); color: white; text-align: center; padding: 15px; }
+        .filter { display: flex; overflow-x: auto; background: white; padding: 10px; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .filter button { padding: 8px 15px; border-radius: 20px; border: 2px solid var(--p); background: none; color: var(--p); cursor: pointer; font-weight: bold; white-space: nowrap; }
+        .filter button.active { background: var(--p); color: white; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        .card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; }
+        .card img { width: 100%; height: 160px; object-fit: cover; }
+        .info { padding: 10px; text-align: center; }
+        .price { color: var(--p); font-weight: bold; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; padding: 20px; border-radius: 15px; text-align: center; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close { position: absolute; top: 10px; left: 15px; font-size: 30px; cursor: pointer; color: #666; }
+        
+        .slider { display: flex; overflow-x: auto; gap: 10px; scroll-snap-type: x mandatory; margin-bottom: 15px; scrollbar-width: none; }
+        .slider::-webkit-scrollbar { display: none; }
+        .slider img { width: 100%; flex-shrink: 0; scroll-snap-align: center; height: 250px; object-fit: cover; border-radius: 10px; }
+        
+        .carton { background: #f8f9fa; padding: 10px; border-radius: 8px; margin: 10px 0; font-weight: bold; border-right: 5px solid var(--p); text-align: right; }
+        
+        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn { display: flex; align-items: center; justify-content: center; padding: 12px; border-radius: 10px; text-decoration: none; color: white; font-weight: bold; font-size: 0.9rem; }
+        .btn-call { background: #27ae60; grid-column: span 2; margin-bottom: 5px; }
+        .btn-wa { background: var(--w); }
+        .btn-fb { background: var(--fb); }
+        .btn-ig { background: var(--ig); }
+        .btn-tk { background: var(--tk); }
+        .btn:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>My Shoes DZ13</h1>
+        <p style="margin:5px 0; font-size:0.8rem; opacity:0.8;">0559839046 | بيع احدية جلد طبيعي %100</p>
+    </header>
+
+    <div class="filter">
+        <button class="active" onclick="fltr('all', this)">الكل</button>
+        <button onclick="fltr('classique', this)">كلاسيك</button>
+        <button onclick="fltr('mule', this)">نعل</button>
+        <button onclick="fltr('sababt', this)">صبابط</button>
+    </div>
+
+    <div class="grid" id="mainGrid"></div>
+
+    <div id="mBox" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeM()">&times;</span>
+            <div id="mImgs" class="slider"></div>
+            <p style="font-size:0.7rem; color:#999;">(اسحب الصور لرؤية المزيد)</p>
+            
+            <h2 id="mTit" style="margin:10px 0 5px 0;"></h2>
+            <p id="mPrc" class="price" style="font-size:24px; margin-bottom:10px;"></p>
+            
+            <div id="mCart" class="carton"></div>
+            
+            <div class="social-grid">
+                <!-- زر الاتصال الهاتفي -->
+                <a href="tel:0559839046" class="btn btn-call">📞 اتصل الآن: 0559839046</a>
+                
+                <!-- واتساب -->
+                <a href="https://wa.me/213559839046" target="_blank" class="btn btn-wa">WhatsApp</a>
+                
+                <!-- فيسبوك -->
+                <a href="https://www.facebook.com/share/1EWRxPgymQ/?mibextid=wwXIfr" target="_blank" class="btn btn-fb">Facebook</a>
+                
+                <!-- انستغرام -->
+                <a href="https://www.instagram.com/my.shoes.dz13?igsh=MWF2NTkzZ3VhdXUzMQ==" target="_blank" class="btn btn-ig">Instagram</a>
+                
+                <!-- تيك توك -->
+                <a href="https://www.tiktok.com/@my.shoes.dz13?_r=1&_t=ZS-95hmkIURH1t" target="_blank" class="btn btn-tk">TikTok</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function load() {
+            const data = JSON.parse(localStorage.getItem('myShoesData')) || [];
+            const g = document.getElementById('mainGrid');
+            if(!data.length) { 
+                g.innerHTML = "<p style='grid-column:1/-1;text-align:center;padding:50px;color:#999;'>أضف السلعة من صفحة الأدمين!</p>"; 
+                return; 
+            }
+            g.innerHTML = data.map(p => `
+                <div class="card" data-cat="${p.cat}" onclick="openM('${p.id}')">
+                    <img src="${p.images[0]}" loading="lazy">
+                    <div class="info"><h3>${p.title}</h3><p class="price">${p.price}</p></div>
+                </div>
+            `).join('');
+        }
+
+        function openM(id) {
+            const data = JSON.parse(localStorage.getItem('myShoesData')) || [];
+            const p = data.find(x => x.id === id);
+            if(!p) return;
+
+            document.getElementById('mTit').innerText = p.title;
+            document.getElementById('mPrc').innerText = p.price;
+            document.getElementById('mCart').innerText = "محتوى الكرتون: " + (p.carton || "8 أزواج");
+            document.getElementById('mImgs').innerHTML = p.images.map(i => `<img src="${i}">`).join('');
+            
+            document.getElementById('mBox').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            window.history.pushState(null, null, `#${id}`);
+        }
+
+        function closeM() { 
+            document.getElementById('mBox').style.display = 'none'; 
+            document.body.style.overflow = 'auto';
+            window.history.pushState(null, null, ' '); 
+        }
+
+        function fltr(c, b) {
+            document.querySelectorAll('.filter button').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            document.querySelectorAll('.card').forEach(x => {
+                x.style.display = (c=='all' || x.dataset.cat==c) ? 'block' : 'none';
+            });
+        }
+
+        window.onload = load;
+        window.addEventListener('storage', load);
+        window.onhashchange = function() { if(!window.location.hash) closeM(); };
+    </script>
+</body>
+</html>
