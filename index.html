@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Shoes DZ13</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
     <style>
         :root { 
             --p: #e67e22; --d: #1a1a1a; --w: #25d366; 
@@ -67,43 +70,51 @@
             <div id="mCart" class="carton"></div>
             
             <div class="social-grid">
-                <!-- زر الاتصال الهاتفي -->
                 <a href="tel:0559839046" class="btn btn-call">📞 اتصل الآن: 0559839046</a>
-                
-                <!-- واتساب -->
                 <a href="https://wa.me/213559839046" target="_blank" class="btn btn-wa">WhatsApp</a>
-                
-                <!-- فيسبوك -->
                 <a href="https://www.facebook.com/share/1EWRxPgymQ/?mibextid=wwXIfr" target="_blank" class="btn btn-fb">Facebook</a>
-                
-                <!-- انستغرام -->
                 <a href="https://www.instagram.com/my.shoes.dz13?igsh=MWF2NTkzZ3VhdXUzMQ==" target="_blank" class="btn btn-ig">Instagram</a>
-                
-                <!-- تيك توك -->
                 <a href="https://www.tiktok.com/@my.shoes.dz13?_r=1&_t=ZS-95hmkIURH1t" target="_blank" class="btn btn-tk">TikTok</a>
             </div>
         </div>
     </div>
 
     <script>
+        // === [ حط معلومات الـ Config تاعك هنا ] ===
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+        };
+        // ===========================================
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let allProducts = [];
+
         function load() {
-            const data = JSON.parse(localStorage.getItem('myShoesData')) || [];
-            const g = document.getElementById('mainGrid');
-            if(!data.length) { 
-                g.innerHTML = "<p style='grid-column:1/-1;text-align:center;padding:50px;color:#999;'>أضف السلعة من صفحة الأدمين!</p>"; 
-                return; 
-            }
-            g.innerHTML = data.map(p => `
-                <div class="card" data-cat="${p.cat}" onclick="openM('${p.id}')">
-                    <img src="${p.images[0]}" loading="lazy">
-                    <div class="info"><h3>${p.title}</h3><p class="price">${p.price}</p></div>
-                </div>
-            `).join('');
+            // جلب البيانات من Firebase أونلاين
+            db.ref('products').on('value', (snapshot) => {
+                const data = snapshot.val();
+                const g = document.getElementById('mainGrid');
+                
+                if(!data) { 
+                    g.innerHTML = "<p style='grid-column:1/-1;text-align:center;padding:50px;color:#999;'>أضف السلعة من صفحة الأدمين!</p>"; 
+                    return; 
+                }
+
+                allProducts = Object.values(data);
+                g.innerHTML = allProducts.map(p => `
+                    <div class="card" data-cat="${p.cat}" onclick="openM('${p.id}')">
+                        <img src="${p.images[0]}" loading="lazy">
+                        <div class="info"><h3>${p.title}</h3><p class="price">${p.price}</p></div>
+                    </div>
+                `).join('');
+            });
         }
 
         function openM(id) {
-            const data = JSON.parse(localStorage.getItem('myShoesData')) || [];
-            const p = data.find(x => x.id === id);
+            const p = allProducts.find(x => x.id === id);
             if(!p) return;
 
             document.getElementById('mTit').innerText = p.title;
@@ -131,7 +142,6 @@
         }
 
         window.onload = load;
-        window.addEventListener('storage', load);
         window.onhashchange = function() { if(!window.location.hash) closeM(); };
     </script>
 </body>
